@@ -22,3 +22,18 @@ func TestRedactArgs(t *testing.T) {
 		t.Fatalf("%v", out["password"])
 	}
 }
+
+func TestHashBindsReplaceTextWhitespace(t *testing.T) {
+	for _, mode := range []string{"replace_text", " replace_text "} {
+		for _, field := range []string{"find", "body"} {
+			t.Run(mode+"/"+field, func(t *testing.T) {
+				args := map[string]any{"mode": mode, "find": "cat", "body": "dog"}
+				before := Hash("confluence_update_page", args)
+				args[field] = " " + args[field].(string) + " "
+				if before == Hash("confluence_update_page", args) {
+					t.Fatalf("%s whitespace does not change the approval hash", field)
+				}
+			})
+		}
+	}
+}

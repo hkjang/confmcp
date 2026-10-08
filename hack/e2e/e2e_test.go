@@ -19,6 +19,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 var (
@@ -91,6 +92,9 @@ func (s *session) apiKey() string {
 // tool calls an MCP tool with an API key and returns (isError, payload).
 func tool(t *testing.T, key, name string, args map[string]any) (bool, map[string]any) {
 	t.Helper()
+	// Stay within the default 120 requests/minute during sequential scenarios.
+	// Concurrent calls still sleep together, preserving the single-execution race.
+	time.Sleep(500 * time.Millisecond)
 	body, _ := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/call",
 		"params": map[string]any{"name": name, "arguments": args}})
 	req, _ := http.NewRequest("POST", base+"/mcp", bytes.NewReader(body))
@@ -357,6 +361,94 @@ func TestAC15_ContextPathKorean(t *testing.T) {
 	s := dump(out)
 	if !strings.Contains(s, "/confluence/pages/viewpage.action?pageId=65538") {
 		t.Fatalf("context path or Korean title broken: %s", s)
+	}
+}
+
+// createTextPage uses the same proposal, approval and execution path as a client.
+func createTextPage(t *testing.T, storage string) string {
+	t.Helper()
+	args := map[string]any{
+		"spaceKey": "DEV", "title": fmt.Sprintf("%s-%d", t.Name(), time.Now().UnixNano()),
+		"body": storage, "format": "storage",
+	}
+	args["approvalId"] = propose(t, aliceKey, "confluence_create_page", args)
+	approve(t, alice, args["approvalId"].(string))
+	isErr, out := tool(t, aliceKey, "confluence_create_page", args)
+	data, _ := out["data"].(map[string]any)
+	result, _ := data["result"].(map[string]any)
+	id, _ := result["id"].(string)
+	if isErr || id == "" {
+		t.Fatalf("create page failed: %v", out)
+	}
+	return id
+}
+
+func pageStorage(t *testing.T, id string) string {
+	t.Helper()
+	isErr, out := tool(t, aliceKey, "confluence_get_page", map[string]any{"pageId": id, "format": "storage"})
+	data, _ := out["data"].(map[string]any)
+	body, _ := data["body"].(map[string]any)
+	storage, ok := body["content"].(string)
+	if isErr || !ok {
+		t.Fatalf("read page failed: %v", out)
+	}
+	return storage
+}
+
+func TestReplaceTextPreservesLiteralWhitespace(t *testing.T) {
+	setup(t)
+	for _, tc := range []struct {
+		name, storage, find, body, want string
+		all                             bool
+	}{
+		{"surrounding_spaces", "<p>cat| cat |cat</p>", " cat ", " dog ", "<p>cat| dog |cat</p>", false},
+		{"whitespace_only", "<p>a  b  c</p>", "  ", " ", "<p>a b c</p>", true},
+		{"tabs_and_newlines", "<p>cat|\tcat\n|cat</p>", "\tcat\n", "dog", "<p>cat|dog|cat</p>", false},
+		{"delete_first_match", "<p>cat| cat | cat </p>", " cat ", "", "<p>cat|| cat </p>", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			id := createTextPage(t, tc.storage)
+			args := map[string]any{"pageId": id, "expectedVersion": 1, "mode": "replace_text",
+				"find": tc.find, "body": tc.body, "replaceAll": tc.all}
+			args["approvalId"] = propose(t, aliceKey, "confluence_update_page", args)
+			approve(t, alice, args["approvalId"].(string))
+			if isErr, out := tool(t, aliceKey, "confluence_update_page", args); isErr {
+				t.Fatalf("replace_text failed: %v", out)
+			}
+			if got := pageStorage(t, id); got != tc.want {
+				t.Fatalf("stored body = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestReplaceTextApprovalBindsLiteralWhitespace(t *testing.T) {
+	setup(t)
+	for _, field := range []string{"find", "body"} {
+		t.Run(field, func(t *testing.T) {
+			const original = "<p>cat| cat |cat</p>"
+			id := createTextPage(t, original)
+			args := map[string]any{"pageId": id, "expectedVersion": 1, "mode": "replace_text",
+				"find": "cat", "body": "dog"}
+			args["approvalId"] = propose(t, aliceKey, "confluence_update_page", args)
+			approve(t, alice, args["approvalId"].(string))
+			approved := args[field].(string)
+			args[field] = " " + approved + " "
+			if isErr, out := tool(t, aliceKey, "confluence_update_page", args); !isErr || code(out) != "APPROVAL_STALE" {
+				t.Fatalf("changed %s whitespace accepted: code=%q, isError=%v", field, code(out), isErr)
+			}
+			if got := pageStorage(t, id); got != original {
+				t.Fatalf("rejected request changed stored body: %q", got)
+			}
+			// Rejection must not consume the approval for the original arguments.
+			args[field] = approved
+			if isErr, out := tool(t, aliceKey, "confluence_update_page", args); isErr {
+				t.Fatalf("approved request rejected: %v", out)
+			}
+			if got := pageStorage(t, id); got != "<p>dog| cat |cat</p>" {
+				t.Fatalf("approved request stored body = %q", got)
+			}
+		})
 	}
 }
 

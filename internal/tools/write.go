@@ -393,6 +393,10 @@ func prepareUpdate(ctx context.Context, c *Call) (*Plan, error) {
 		BodyFormat: c.Args.OptString("bodyFormat", "markdown"), AllowRemovals: c.Args.OptBool("allowRemovals", false),
 	}
 	if mode == content.ModeReplaceText {
+		// Literal search whitespace is significant, just like the replacement.
+		if v, ok := c.Args["find"].(string); ok {
+			in.Find = v
+		}
 		// body is the replacement; it may legitimately be empty (deletion).
 		if v, ok := c.Args["body"].(string); ok {
 			in.Body = v
