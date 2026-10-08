@@ -1,0 +1,6 @@
+[
+  { "name": "confluence-mcp-reader", "description": "confmcp 조회자: 조회 도구" },
+  { "name": "confluence-mcp-writer", "description": "confmcp 작성자: 조회 + 변경안 작성(본인 승인)" },
+  { "name": "confluence-mcp-approver", "description": "confmcp 승인자: 작성 + 이동·휴지통 및 타인 변경 승인" },
+  { "name": "confluence-mcp-admin", "description": "confmcp 관리자: 설정 관리 (문서 권한 우회 없음)" }
+]

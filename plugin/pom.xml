@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.hkjang.confmcp</groupId>
+  <artifactId>confmcp-permission-plugin</artifactId>
+  <version>0.1.0</version>
+  <packaging>atlassian-plugin</packaging>
+
+  <name>confmcp Permission Resolver</name>
+  <description>
+    confmcp 게이트웨이가 Confluence 자체 PermissionManager 판정을 그대로 사용할 수 있도록
+    서명된 요청에 한해 유효 권한 조회 REST 엔드포인트를 제공합니다. 권한 변경 기능은 포함하지 않습니다.
+  </description>
+
+  <organization>
+    <name>hkjang</name>
+    <url>https://github.com/hkjang/confmcp</url>
+  </organization>
+
+  <properties>
+    <confluence.version>7.2.0</confluence.version>
+    <confluence.data.version>7.2.0</confluence.data.version>
+    <amps.version>8.0.2</amps.version>
+    <spring.scanner.version>2.1.7</spring.scanner.version>
+    <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>atlassian-external</id>
+      <url>https://packages.atlassian.com/mvn/maven-external/</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    <repository>
+      <id>atlassian-maven-external</id>
+      <url>https://packages.atlassian.com/maven-external/</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    <repository>
+      <id>atlassian-atlassian-external</id>
+      <url>https://packages.atlassian.com/mvn/maven-atlassian-external/</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>atlassian-external</id>
+      <url>https://packages.atlassian.com/mvn/maven-external/</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>atlassian-maven-external</id>
+      <url>https://packages.atlassian.com/maven-external/</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Pins every Atlassian library to the exact version Confluence 7.2.0 ships. -->
+      <dependency>
+        <groupId>com.atlassian.confluence</groupId>
+        <artifactId>confluence-plugins-platform-pom</artifactId>
+        <version>${confluence.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.atlassian.confluence</groupId>
+      <artifactId>confluence</artifactId>
+      <version>${confluence.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.atlassian.sal</groupId>
+      <artifactId>sal-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.atlassian.plugins.rest</groupId>
+      <artifactId>atlassian-rest-common</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>jsr311-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.atlassian.plugin</groupId>
+      <artifactId>atlassian-spring-scanner-annotation</artifactId>
+      <version>${spring.scanner.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <!-- Only the version file is filtered; AMPS filters atlassian-plugin.xml itself. -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>confmcp-plugin.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>confmcp-plugin.properties</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>com.atlassian.maven.plugins</groupId>
+        <artifactId>confluence-maven-plugin</artifactId>
+        <version>${amps.version}</version>
+        <extensions>true</extensions>
+        <configuration>
+          <productVersion>${confluence.version}</productVersion>
+          <productDataVersion>${confluence.data.version}</productDataVersion>
+          <enableQuickReload>true</enableQuickReload>
+          <instructions>
+            <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
+            <Export-Package />
+            <Import-Package>
+              com.atlassian.confluence.*;version="0.0",
+              com.atlassian.sal.api.*;version="0.0",
+              com.atlassian.plugins.rest.common.*;version="0.0",
+              com.atlassian.user.*;version="0.0",
+              com.atlassian.crowd.*;version="0.0",
+              com.atlassian.spring.container;version="0.0";resolution:=optional,
+              javax.ws.rs*;version="0.0",
+              javax.servlet*;version="0.0",
+              javax.inject*;version="0.0",
+              org.codehaus.jackson*;version="0.0",
+              org.slf4j*;version="0.0",
+              *;resolution:=optional
+            </Import-Package>
+            <Spring-Context>*</Spring-Context>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.atlassian.plugin</groupId>
+        <artifactId>atlassian-spring-scanner-maven-plugin</artifactId>
+        <version>${spring.scanner.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>atlassian-spring-scanner</goal>
+            </goals>
+            <phase>process-classes</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <verbose>false</verbose>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

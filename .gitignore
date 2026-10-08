@@ -1,0 +1,28 @@
+# Go
+/bin/
+/dist/
+*.test
+
+# Node
+node_modules/
+web/node_modules/
+web/dist/
+
+# Embedded console build output. Only .gitkeep (copied from web/public) is
+# tracked, so `go build ./...` works on a fresh clone without the web build.
+internal/webui/dist/*
+!internal/webui/dist/.gitkeep
+
+# Release artifacts
+*.tar.gz
+*.sha256
+
+# Playwright is a dev-only dependency of the screenshot tooling
+web/test-results/
+
+# Local env
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+plugin/target/

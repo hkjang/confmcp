@@ -1,0 +1,145 @@
+:root {
+  color-scheme: light dark;
+  /* The user preference multiplies every rem-based size in the app. */
+  --confmcp-font-scale: 1;
+  font-size: calc(16px * var(--confmcp-font-scale));
+  --confmcp-accent: #3b5bdb;
+  --confmcp-surface: light-dark(#f6f8fc, #15171c);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.confmcp-main {
+  background: var(--confmcp-surface);
+  min-height: 100vh;
+}
+
+/* Navigation scrollbar, styled through Mantine's classNames so it follows the
+   navbar's own palette: a slim indigo thumb on a transparent track that
+   widens on hover. */
+.confmcp-nav-scrollbar {
+  width: 10px;
+  padding: 2px;
+  background: transparent;
+  transition: width 120ms ease, background-color 120ms ease;
+}
+
+.confmcp-nav-scrollbar:hover {
+  width: 12px;
+  background-color: light-dark(rgba(59, 91, 219, 0.07), rgba(186, 200, 255, 0.06));
+}
+
+.confmcp-nav-thumb {
+  background-color: light-dark(rgba(59, 91, 219, 0.32), rgba(186, 200, 255, 0.3)) !important;
+  border-radius: 8px;
+}
+
+.confmcp-nav-scrollbar:hover .confmcp-nav-thumb {
+  background-color: light-dark(rgba(59, 91, 219, 0.58), rgba(186, 200, 255, 0.55)) !important;
+}
+
+/* Generic scrollbars (tables, code blocks) follow the same language. */
+.confmcp-scroll-surface {
+  scrollbar-width: thin;
+  scrollbar-color: light-dark(rgba(59, 91, 219, 0.4), rgba(186, 200, 255, 0.35)) transparent;
+}
+
+.confmcp-scroll-surface::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.confmcp-scroll-surface::-webkit-scrollbar-thumb {
+  background-color: light-dark(rgba(59, 91, 219, 0.38), rgba(186, 200, 255, 0.32));
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.confmcp-scroll-surface::-webkit-scrollbar-thumb:hover {
+  background-color: light-dark(rgba(59, 91, 219, 0.62), rgba(186, 200, 255, 0.58));
+}
+
+.confmcp-scroll-surface::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.confmcp-code {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Unified diff: one line per row, added and removed lines tinted. */
+.confmcp-diff {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin: 0;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-default-border);
+  overflow: auto;
+  max-height: 520px;
+}
+
+.confmcp-diff-line {
+  display: block;
+  padding: 1px 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.confmcp-diff-add {
+  background: light-dark(#e6fcf5, rgba(18, 184, 134, 0.16));
+  color: light-dark(#087f5b, #63e6be);
+}
+
+.confmcp-diff-del {
+  background: light-dark(#fff5f5, rgba(250, 82, 82, 0.15));
+  color: light-dark(#c92a2a, #ffa8a8);
+}
+
+.confmcp-diff-hunk {
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-dimmed);
+}
+
+.confmcp-login-hero {
+  background:
+    radial-gradient(1100px 520px at 12% -10%, rgba(66, 99, 235, 0.22), transparent 60%),
+    radial-gradient(900px 480px at 92% 8%, rgba(32, 201, 151, 0.14), transparent 62%);
+}
+
+.confmcp-stat {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.confmcp-stat:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+.confmcp-nav-link[data-active] {
+  font-weight: 650;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

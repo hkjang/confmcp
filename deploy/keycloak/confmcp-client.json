@@ -1,0 +1,20 @@
+{
+  "clientId": "confmcp",
+  "name": "confmcp 콘솔",
+  "description": "confmcp 웹 콘솔 로그인과 MCP OAuth 로그인에 함께 쓰는 클라이언트",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": false,
+  "clientAuthenticatorType": "client-secret",
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": false,
+  "redirectUris": ["https://confmcp.example.internal/auth/oidc/callback"],
+  "webOrigins": ["https://confmcp.example.internal"],
+  "attributes": {
+    "pkce.code.challenge.method": "S256",
+    "post.logout.redirect.uris": "https://confmcp.example.internal/login"
+  },
+  "defaultClientScopes": ["web-origins", "profile", "roles", "email"]
+}

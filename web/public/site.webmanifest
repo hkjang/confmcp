@@ -1,0 +1,16 @@
+{
+  "name": "confmcp — Confluence MCP 게이트웨이",
+  "short_name": "confmcp",
+  "description": "요청자 본인의 Confluence 권한으로만 문서를 읽고 쓰는 MCP 게이트웨이",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b5bdb",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

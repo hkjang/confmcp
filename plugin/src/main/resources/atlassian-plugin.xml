@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<atlassian-plugin key="${atlassian.plugin.key}"
+                  name="${project.name}"
+                  plugins-version="2">
+  <plugin-info>
+    <description>${project.description}</description>
+    <version>${project.version}</version>
+    <vendor name="${project.organization.name}" url="${project.organization.url}" />
+  </plugin-info>
+
+  <!--
+    Read-only effective permission lookups for the confmcp gateway:
+      <context>/rest/confmcp/1.0/health
+      <context>/rest/confmcp/1.0/permissions/check
+      <context>/rest/confmcp/1.0/permissions/batch
+      <context>/rest/confmcp/1.0/users
+    Every one of these is anonymous at the Atlassian layer and instead requires
+    a valid gateway HMAC signature (checked in PermissionResource).
+
+      <context>/rest/confmcp/1.0/config   (GET/PUT, Confluence system administrators only)
+  -->
+  <rest key="confmcp-rest" path="/confmcp" version="1.0">
+    <description>confmcp 유효 권한 조회 API (게이트웨이 서명 필수)</description>
+  </rest>
+</atlassian-plugin>

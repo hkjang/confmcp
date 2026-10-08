@@ -1,0 +1,2 @@
+# Keeps internal/webui/dist in git so `go build ./...` works on a fresh clone.
+# Copied from web/public on every console build.
