@@ -115,8 +115,18 @@ func Hash(toolName string, args map[string]any) string {
 	sort.Strings(keys)
 	var sb strings.Builder
 	sb.WriteString(toolName)
+	mode, _ := args["mode"].(string)
+	literalText := toolName == "confluence_update_page" && strings.TrimSpace(mode) == "replace_text"
 	for _, k := range keys {
-		b, _ := json.Marshal(normalise(args[k]))
+		value := normalise(args[k])
+		if literalText && (k == "find" || k == "body") {
+			// Whitespace changes which text is replaced or what gets written.
+			// An approval must bind these strings exactly as they will execute.
+			if raw, ok := args[k].(string); ok {
+				value = raw
+			}
+		}
+		b, _ := json.Marshal(value)
 		sb.WriteString("\n")
 		sb.WriteString(k)
 		sb.WriteString("=")
