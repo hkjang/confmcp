@@ -70,6 +70,15 @@ func (s *session) do(method, path string, body any) (int, string) {
 }
 
 func (s *session) apiKey() string {
+	// Revoke keys left by earlier runs so the per-user key limit is not hit.
+	_, list := s.do("GET", "/api/me/keys", nil)
+	var keys []struct{ ID, Name, Status string }
+	_ = json.Unmarshal([]byte(list), &keys)
+	for _, k := range keys {
+		if k.Name == "e2e" && k.Status != "revoked" {
+			s.do("DELETE", "/api/me/keys/"+k.ID, nil)
+		}
+	}
 	_, body := s.do("POST", "/api/me/keys", map[string]any{"name": "e2e", "role": "executor"})
 	var issued struct{ Secret string }
 	_ = json.Unmarshal([]byte(body), &issued)
@@ -370,5 +379,22 @@ func TestPolicyDeniesHR(t *testing.T) {
 	_, out := tool(t, aliceKey, "confluence_spaces", nil)
 	if strings.Contains(dump(out), `"HR"`) {
 		t.Fatal("denied space listed")
+	}
+}
+
+func TestMoveNeedsSeparateApprover(t *testing.T) {
+	setup(t)
+	v := currentVersion(t, "65540")
+	_, out := tool(t, bobKey, "confluence_move_page", map[string]any{"pageId": "65540", "targetParentId": "65543", "expectedVersion": v})
+	if code(out) != "APPROVAL_REQUIRED" || out["requiresApprover"] != true {
+		t.Fatalf("move should need a separate approver: %v", out)
+	}
+	id := out["approvalId"].(string)
+	if c, _ := bob.do("POST", "/api/me/approvals/"+id+"/decide", map[string]any{"approve": true}); c != 403 {
+		t.Fatalf("requester approved their own move: %d", c)
+	}
+	// The admin role alone does not let someone without a Confluence view approve.
+	if c, b := adm.do("POST", "/api/admin/approvals/"+id+"/decide", map[string]any{"approve": true}); c != 200 && c != 403 {
+		t.Fatalf("admin decide: %d %s", c, b)
 	}
 }

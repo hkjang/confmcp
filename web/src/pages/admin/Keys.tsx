@@ -177,7 +177,7 @@ function KeysTab() {
         {keys.data && rows.length === 0 ? <EmptyState label="해당하는 키가 없습니다" /> : null}
 
         {rows.length > 0 ? (
-          <TableScroll minWidth={1180}>
+          <TableScroll minWidth={1320}>
             <Table striped fz="sm">
               <Table.Thead>
                 <Table.Tr>
@@ -236,10 +236,10 @@ function KeysTab() {
                         ) : null}
                       </Table.Td>
                       <Table.Td>
-                        <Text size="sm">{formatDateTime(k.rotationDueAt)}</Text>
+                        <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{formatDateTime(k.rotationDueAt)}</Text>
                       </Table.Td>
                       <Table.Td>
-                        <Text size="sm">{formatDateTime(k.expiresAt)}</Text>
+                        <Text size="sm" style={{ whiteSpace: 'nowrap' }}>{formatDateTime(k.expiresAt)}</Text>
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm">{formatRelative(k.lastUsedAt)}</Text>

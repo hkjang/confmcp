@@ -143,3 +143,14 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Tables: headers, badges and dates keep their natural width. Table cells may
+   shrink below a badge's text otherwise, which clipped labels such as "폐기"
+   and split short headers like "소유자" across two lines. Long tables scroll
+   horizontally inside TableScroll instead. */
+.mantine-Table-th {
+  white-space: nowrap;
+}
+.mantine-Table-td .mantine-Badge-root {
+  min-width: max-content;
+}

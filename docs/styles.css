@@ -290,6 +290,7 @@ small { color: var(--muted); }
   font-family: var(--mono); font-size: .98rem; line-height: 1.9;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 20px 22px; box-shadow: var(--shadow); overflow-x: auto; white-space: pre; margin: 0 0 1em;
+  color: var(--text);
 }
 .formula b { color: var(--brand); }
 

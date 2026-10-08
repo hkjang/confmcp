@@ -90,11 +90,21 @@ export function MyKeysPage() {
       <Section>
         {keys.isLoading ? <LoadingBlock /> : null}
         {keys.error ? <ErrorBlock error={keys.error} /> : null}
-        {keys.data && keys.data.length === 0 ? <EmptyState label="발급된 키가 없습니다." /> : null}
+        {inactive.length > 0 ? (
+          <Group justify="flex-end" mb="sm">
+            <Switch
+              checked={showInactive}
+              onChange={(event) => setShowInactive(event.currentTarget.checked)}
+              label={`폐기·만료된 키 표시 (${inactive.length})`}
+            />
+          </Group>
+        ) : null}
 
-        {keys.data && keys.data.length > 0 ? (
-          <TableScroll minWidth={900}>
-            <Table highlightOnHover striped stickyHeader>
+        {keys.data && visibleKeys.length === 0 ? <EmptyState label="사용 중인 키가 없습니다." /> : null}
+
+        {visibleKeys.length > 0 ? (
+          <TableScroll minWidth={1180}>
+            <Table highlightOnHover striped stickyHeader style={{ whiteSpace: 'nowrap' }}>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>이름</Table.Th>
@@ -108,7 +118,7 @@ export function MyKeysPage() {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {keys.data.map((key) => (
+                {visibleKeys.map((key) => (
                   <Table.Tr key={key.id}>
                     <Table.Td>
                       <Text fw={600}>{key.name}</Text>
@@ -122,7 +132,7 @@ export function MyKeysPage() {
                         confmcp_{key.prefix}…
                       </Text>
                     </Table.Td>
-                    <Table.Td>
+                    <Table.Td style={{ whiteSpace: 'normal' }} miw={260}>
                       <Badge variant="light" mb={4}>
                         {key.role || '—'}
                       </Badge>
