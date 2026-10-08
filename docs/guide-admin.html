@@ -55,7 +55,7 @@
         "name": "confmcp",
         "applicationCategory": ["DeveloperApplication", "SecurityApplication"],
         "operatingSystem": "Linux (Docker)",
-        "softwareVersion": "0.1.0",
+        "softwareVersion": "0.1.1",
         "license": "https://www.apache.org/licenses/LICENSE-2.0",
         "codeRepository": "https://github.com/hkjang/confmcp",
         "downloadUrl": "https://github.com/hkjang/confmcp/releases",
@@ -77,14 +77,14 @@
       "inLanguage": "ko",
       "totalTime": "PT20M",
       "supply": [
-        { "@type": "HowToSupply", "name": "confmcp-v0.1.0.tar.gz (GitHub 릴리스)" },
+        { "@type": "HowToSupply", "name": "confmcp-v0.1.1.tar.gz (GitHub 릴리스)" },
         { "@type": "HowToSupply", "name": "PostgreSQL (postgres:17-alpine 이미지 또는 기존 데이터베이스)" }
       ],
       "tool": [
         { "@type": "HowToTool", "name": "Docker 와 Docker Compose" }
       ],
       "step": [
-        { "@type": "HowToStep", "position": 1, "name": "이미지 적재", "text": "docker load -i confmcp-v0.1.0.tar.gz 로 confmcp:v0.1.0 이미지를 적재합니다.", "url": "https://hkjang.github.io/confmcp/guide-admin.html#install-load" },
+        { "@type": "HowToStep", "position": 1, "name": "이미지 적재", "text": "docker load -i confmcp-v0.1.1.tar.gz 로 confmcp:v0.1.1 이미지를 적재합니다.", "url": "https://hkjang.github.io/confmcp/guide-admin.html#install-load" },
         { "@type": "HowToStep", "position": 2, "name": "PostgreSQL 준비", "text": "postgres:17-alpine 이미지를 따로 반입하거나 기존 PostgreSQL 데이터베이스를 준비합니다.", "url": "https://hkjang.github.io/confmcp/guide-admin.html#install-postgres" },
         { "@type": "HowToStep", "position": 3, "name": "환경변수 작성", "text": "deploy/.env.example 을 deploy/.env 로 복사하고 POSTGRES_PASSWORD, BOOTSTRAP_ADMIN_PASSWORD, ENCRYPTION_KEY(openssl rand -base64 32)를 채웁니다.", "url": "https://hkjang.github.io/confmcp/guide-admin.html#install-env" },
         { "@type": "HowToStep", "position": 4, "name": "기동", "text": "docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d 로 기동합니다.", "url": "https://hkjang.github.io/confmcp/guide-admin.html#install-run" },
@@ -220,8 +220,8 @@
       </ul>
 
       <h3 id="install-load">1. 이미지 적재</h3>
-      <p><a href="https://github.com/hkjang/confmcp/releases">GitHub 릴리스</a>에서 <code>confmcp-v0.1.0.tar.gz</code> 를 받아 서버로 옮깁니다. 웹 콘솔·글꼴·마이그레이션이 모두 이미지에 들어 있어 실행 중 외부 다운로드가 없습니다.</p>
-<pre><code>docker load -i confmcp-v0.1.0.tar.gz      <span class="c"># → confmcp:v0.1.0</span></code></pre>
+      <p><a href="https://github.com/hkjang/confmcp/releases">GitHub 릴리스</a>에서 <code>confmcp-v0.1.1.tar.gz</code> 를 받아 서버로 옮깁니다. 웹 콘솔·글꼴·마이그레이션이 모두 이미지에 들어 있어 실행 중 외부 다운로드가 없습니다.</p>
+<pre><code>docker load -i confmcp-v0.1.1.tar.gz      <span class="c"># → confmcp:v0.1.1</span></code></pre>
 
       <h3 id="install-postgres">2. PostgreSQL 이미지 반입</h3>
       <p>confmcp 릴리스에는 PostgreSQL 이미지가 들어 있지 않습니다. 인터넷이 되는 곳에서 저장해 함께 옮기거나, 기존 PostgreSQL 을 <code>DATABASE_URL</code> 로 지정하십시오.</p>
@@ -256,11 +256,11 @@ $EDITOR deploy/.env     <span class="c"># POSTGRES_PASSWORD, BOOTSTRAP_ADMIN_PAS
   -e DATABASE_URL='postgres://confmcp:&lt;비밀번호&gt;@&lt;DB 호스트&gt;:5432/confmcp?sslmode=disable' \
   -e BOOTSTRAP_ADMIN=admin -e BOOTSTRAP_ADMIN_PASSWORD='&lt;관리자 비밀번호&gt;' \
   -e ENCRYPTION_KEY='&lt;openssl rand -base64 32 로 만든 값&gt;' \
-  confmcp:v0.1.0</code></pre>
+  confmcp:v0.1.1</code></pre>
       <p>데이터베이스 마이그레이션은 시작할 때 자동으로 적용됩니다.</p>
 
       <h3 id="install-check">5. 상태 확인</h3>
-<pre><code>curl -fsS http://localhost:8080/healthz    <span class="c"># {"status":"ok","service":"confmcp","version":"0.1.0",…}</span>
+<pre><code>curl -fsS http://localhost:8080/healthz    <span class="c"># {"status":"ok","service":"confmcp","version":"0.1.1",…}</span>
 curl -fsS http://localhost:8080/readyz     <span class="c"># 데이터베이스·설정이 준비되면 200, 아니면 503</span>
 curl -s   http://localhost:8080/api/version</code></pre>
       <p><code>/readyz</code> 응답의 <code>confluenceConfigured</code> 로 Confluence 연결 설정 여부도 볼 수 있습니다. 이제 <code>http://&lt;호스트&gt;:8080</code> 에 <code>BOOTSTRAP_ADMIN</code> 계정으로 로그인해 <a href="#setup">초기 설정</a>을 진행합니다.</p>
@@ -280,6 +280,7 @@ curl -s   http://localhost:8080/api/version</code></pre>
 docker exec -i confmcp-postgres pg_restore -U confmcp -d confmcp --clean --if-exists &lt; confmcp-2026-10-08.dump
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env start confmcp</code></pre>
       <p>복구할 때는 백업 당시와 같은 <code>ENCRYPTION_KEY</code> 로 기동해야 합니다.</p>
+      <p><strong>v0.1.1 업그레이드·롤백 주의:</strong> <code>replace_text</code> 는 검색 문자열의 앞뒤 공백을 보존하며, <code>find</code>·<code>body</code> 의 공백도 승인 해시에 반영합니다. 공백이 포함된 기존 변경안은 재승인이 필요할 수 있습니다. 버전을 바꾸면 같은 재시도 키로 이전 성공 결과를 조회하는 대신 충돌 또는 <code>APPROVAL_STALE</code> 응답을 받을 수 있으므로, 현재 문서와 실행 이력을 확인한 뒤 변경안을 다시 작성하십시오. 데이터베이스 스키마 변경은 없으며 권한 플러그인은 v0.1.0 을 그대로 사용합니다.</p>
     </section>
 
     <section id="setup" aria-labelledby="setup-title">
@@ -794,7 +795,7 @@ scripts/go.sh test ./...  <span class="c"># 단위 테스트 (internal/confluenc
       </ul>
       <div class="related">
         <a class="card" href="guide-user.html"><strong>사용자 가이드</strong><span>MCP 연결, 변경 승인, 오류 코드, 도구 표</span></a>
-        <a class="card" href="https://github.com/hkjang/confmcp/releases"><strong>GitHub 릴리스</strong><span>confmcp-v0.1.0.tar.gz 와 SHA-256</span></a>
+        <a class="card" href="https://github.com/hkjang/confmcp/releases"><strong>GitHub 릴리스</strong><span>confmcp-v0.1.1.tar.gz 와 SHA-256</span></a>
       </div>
     </section>
   </article>
@@ -804,7 +805,7 @@ scripts/go.sh test ./...  <span class="c"># 단위 테스트 (internal/confluenc
   <div class="container footer-inner">
     <div>
       <a class="brand" href="./"><img src="assets/favicon.svg" alt="" width="28" height="28"><span>confmcp</span></a>
-      <p style="margin:10px 0 0">v0.1.0 기준 문서 · Apache-2.0 라이선스 · Confluence Server 7.2.0 대상</p>
+      <p style="margin:10px 0 0">v0.1.1 기준 문서 · Apache-2.0 라이선스 · Confluence Server 7.2.0 대상</p>
     </div>
     <ul class="footer-links">
       <li><a href="./">소개</a></li>

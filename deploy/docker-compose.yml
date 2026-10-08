@@ -1,7 +1,7 @@
 # confmcp 오프라인 배포용 구성.
 #
 # 새로 설치:
-#   docker load -i confmcp-v0.1.0.tar.gz
+#   docker load -i confmcp-v0.1.1.tar.gz
 #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d
 #
 # 업그레이드: deploy/upgrade.sh confmcp-v<새 버전>.tar.gz
@@ -30,7 +30,7 @@ services:
       retries: 10
 
   confmcp:
-    image: confmcp:v${CONFMCP_VERSION:-0.1.0}
+    image: confmcp:v${CONFMCP_VERSION:-0.1.1}
     container_name: confmcp
     restart: unless-stopped
     depends_on:

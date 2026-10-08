@@ -50,5 +50,5 @@
 
   <rect x="88" y="530" width="1024" height="2" fill="#ffffff" opacity="0.25"/>
   <text x="90" y="580" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif" font-size="24" fill="#c5d3ff">Confluence Server 7.2.0 · Keycloak SSO · 오프라인 단일 도커 이미지</text>
-  <text x="1110" y="580" text-anchor="end" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif" font-size="24" font-weight="700" fill="#ffffff">v0.1.0</text>
+  <text x="1110" y="580" text-anchor="end" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif" font-size="24" font-weight="700" fill="#ffffff">v0.1.1</text>
 </svg>

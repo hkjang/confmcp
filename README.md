@@ -49,7 +49,7 @@ Keycloak 으로 사용자를 인증하고, 매 호출마다 **요청자 본인�
 
 ```bash
 # 1) 릴리스 이미지 적재
-docker load -i confmcp-v0.1.0.tar.gz
+docker load -i confmcp-v0.1.1.tar.gz
 
 # 2) 환경변수 (네 개뿐입니다)
 cp deploy/.env.example deploy/.env
