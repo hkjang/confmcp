@@ -119,6 +119,103 @@ func tool(t *testing.T, key, name string, args map[string]any) (bool, map[string
 	return env.Result.IsError, env.Result.StructuredContent
 }
 
+// mcpInitialize opens an MCP session with an API key and returns the session id
+// the server publishes on the initialize response.
+func mcpInitialize(t *testing.T, key string) string {
+	t.Helper()
+	time.Sleep(500 * time.Millisecond)
+	body, _ := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "initialize",
+		"params": map[string]any{"protocolVersion": "2025-06-18",
+			"clientInfo": map[string]any{"name": "e2e", "version": "0"}}})
+	req, _ := http.NewRequest("POST", base+"/mcp", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+key)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	id := resp.Header.Get("Mcp-Session-Id")
+	if resp.StatusCode != 200 || id == "" {
+		t.Fatalf("initialize: %d no session id: %s", resp.StatusCode, raw)
+	}
+	return id
+}
+
+// mcpDelete sends DELETE /mcp for a session id. An empty key omits the
+// Authorization header. It returns the status and the WWW-Authenticate value.
+func mcpDelete(t *testing.T, key, sessionID string) (int, string) {
+	t.Helper()
+	time.Sleep(500 * time.Millisecond)
+	req, _ := http.NewRequest("DELETE", base+"/mcp", nil)
+	if key != "" {
+		req.Header.Set("Authorization", "Bearer "+key)
+	}
+	req.Header.Set("Mcp-Session-Id", sessionID)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	io.Copy(io.Discard, resp.Body)
+	return resp.StatusCode, resp.Header.Get("WWW-Authenticate")
+}
+
+// sessionClosed reads closed_at for one MCP session through the admin console
+// API, so the assertion goes over the same HTTP path an operator would use.
+func sessionClosed(t *testing.T, sessionID string) bool {
+	t.Helper()
+	c, body := adm.do("GET", "/api/admin/sessions?limit=200", nil)
+	if c != 200 {
+		t.Fatalf("admin sessions: %d %s", c, body)
+	}
+	var rows []struct {
+		ID       string  `json:"id"`
+		ClosedAt *string `json:"closedAt"`
+	}
+	if err := json.Unmarshal([]byte(body), &rows); err != nil {
+		t.Fatalf("admin sessions: %v %s", err, body)
+	}
+	for _, row := range rows {
+		if row.ID == sessionID {
+			return row.ClosedAt != nil
+		}
+	}
+	t.Fatalf("session %s not listed by the admin console", sessionID)
+	return false
+}
+
+// TestMCPSessionCloseRequiresOwner pins the DELETE /mcp contract: it needs the
+// same authentication GET and initialize need, and it may only close a session
+// the caller owns. A stranger must not learn whether the id exists, so the
+// answer is 204 either way and only closed_at tells the two apart.
+func TestMCPSessionCloseRequiresOwner(t *testing.T) {
+	setup(t)
+	id := mcpInitialize(t, aliceKey)
+
+	if c, challenge := mcpDelete(t, "", id); c != 401 || !strings.Contains(challenge, "resource_metadata") {
+		t.Fatalf("unauthenticated DELETE: status %d challenge %q", c, challenge)
+	}
+	if sessionClosed(t, id) {
+		t.Fatal("unauthenticated DELETE closed the session")
+	}
+
+	if c, _ := mcpDelete(t, bobKey, id); c != 204 {
+		t.Fatalf("another user's DELETE: status %d (must not reveal the session)", c)
+	}
+	if sessionClosed(t, id) {
+		t.Fatal("another user closed alice's session")
+	}
+
+	if c, _ := mcpDelete(t, aliceKey, id); c != 204 {
+		t.Fatalf("owner DELETE: status %d", c)
+	}
+	if !sessionClosed(t, id) {
+		t.Fatal("owner DELETE did not close the session")
+	}
+}
+
 func code(m map[string]any) string { s, _ := m["code"].(string); return s }
 
 func dump(v any) string { b, _ := json.Marshal(v); return string(b) }

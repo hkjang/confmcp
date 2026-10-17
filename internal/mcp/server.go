@@ -49,7 +49,14 @@ func (s *Server) Handle(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		s.handleGet(w, r)
 	case http.MethodDelete:
-		s.closeSession(r)
+		// Closing a session changes server state, so it needs the same
+		// authentication GET and initialize need.
+		principal, err := s.auth.PrincipalFor(r)
+		if err != nil {
+			s.unauthorized(w, r, err)
+			return
+		}
+		s.closeSession(r.Context(), principal, r)
 		w.WriteHeader(http.StatusNoContent)
 	case http.MethodOptions:
 		w.Header().Set("Allow", "GET, POST, DELETE, OPTIONS")
@@ -379,14 +386,25 @@ func (s *Server) touchSession(ctx context.Context, r *http.Request) {
 	}
 }
 
-func (s *Server) closeSession(r *http.Request) {
+// closeSession marks one session closed. The UPDATE is narrowed to the caller's
+// own session: knowing an id must not be enough to close somebody else's, which
+// would skew the active-session count in the admin console. A session the caller
+// does not own simply matches no row — the caller is not told which case it was,
+// so the endpoint cannot be used to probe for live session ids.
+//
+// The username fallback covers rows openSession wrote with a NULL user_id (it
+// does that when the principal carries no user id), so their owner can still
+// close them.
+func (s *Server) closeSession(ctx context.Context, p tools.Principal, r *http.Request) {
 	raw := r.Header.Get(SessionHeader)
 	if raw == "" {
 		return
 	}
 	if id, err := uuid.Parse(raw); err == nil {
-		_, _ = s.pool.Exec(r.Context(),
-			`UPDATE mcp_sessions SET closed_at=NOW() WHERE id=$1`, id)
+		_, _ = s.pool.Exec(ctx, `
+			UPDATE mcp_sessions SET closed_at=NOW()
+			WHERE id=$1 AND (user_id=$2 OR (user_id IS NULL AND username=$3))`,
+			id, p.UserID, p.Username)
 	}
 }
 
